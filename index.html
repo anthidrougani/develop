@@ -1,4 +1,5 @@
-﻿<!DOCTYPE HTML>
+﻿
+<!DOCTYPE HTML>
 <html>
 <head>
     <title>Super-Mario</title>
@@ -32,6 +33,7 @@
                 this.load.image('back', 'assets/back.png');
                 this.load.image('button1', 'assets/button1.png');
                 this.load.image('button2', 'assets/button2.png');
+                this.load.image('button3', 'assets/button3.png');
                 this.load.audio('jump', ['audio/jump.wav']);
                 this.load.audio('mush', ['audio/mush.wav']);
                 this.load.audio('coin', ['audio/coin.wav']);
@@ -45,7 +47,9 @@
                 this.load.audio('bgm', ['audio/bgm.mp3']);
                 this.load.tilemap('level', 'assets/super_mario_map.json', null,
                     Phaser.Tilemap.TILED_JSON);
-                this.load.tilemap('level', 'assets/2014104.json', null,
+                this.load.tilemap('level', 'assets/2014104a.json', null,
+                    Phaser.Tilemap.TILED_JSON);
+                this.load.tilemap('level', 'assets/2014104b.json', null,
                     Phaser.Tilemap.TILED_JSON);
             }, create: function () {
                 this.game.scale.pageAlignHorizontally = true;
@@ -59,6 +63,7 @@
                 game.load.image("back");
                 game.load.image("button1");
                 game.load.image("button2");
+                game.load.image("button3");
             },
             create: function () {
                 game.add.tileSprite(0, 0, 256, 240, 'back');
@@ -69,10 +74,15 @@
                 var button2 = game.add.button(0, 25, 'button2', function () {
                     game.state.start('level2');
                 });
+                var button3 = game.add.button(0, 50, 'button3', function () {
+                    game.state.start('level3');
+                });
             }, level1: function () {
                 game.state.start('level1');
             }, level2: function () {
                 game.state.start('level2');
+            }, level3: function () {
+                game.state.start('level3');
             }
 
         };
@@ -353,6 +363,7 @@
                         gameoverText = game.add.text(20, 100, 'GAME OVER', { fontSize: '32px', fill: '#000' });
                         gameoverText.fixedToCamera = true;
 
+                        game.state.start("level1");
 
 
 
@@ -387,6 +398,7 @@
                     game.paused = true;
                     gameoverText = game.add.text(20, 100, 'GAME OVER', { fontSize: '32px', fill: '#000' });
                     gameoverText.fixedToCamera = true; ``
+                    game.state.start("level1");
 
 
                 }
@@ -430,7 +442,7 @@
                 this.load.audio('stomp', ['audio/stomp.wav']);
                 this.load.audio('win', ['audio/win.wav']);
                 this.load.audio('bgm', ['audio/bgm.mp3']);
-                this.load.tilemap('level', 'assets/2014104.json', null,
+                this.load.tilemap('level', 'assets/2014104a.json', null,
                     Phaser.Tilemap.TILED_JSON);
 
 
@@ -585,6 +597,312 @@
                     door.kill();
 
 
+                    game.state.start("level3");
+
+                });
+            },
+            portal1Overlap: function (player, portal1) {
+                var snd = game.add.audio("chest");
+                snd.play();
+                player.body.enable = false;
+                portal1.kill();
+                score += 5000;
+                scoreText.text = 'Score: ' + score;
+                game.time.events.add(Phaser.Timer.SECOND, function () {
+                    player.body.enable = true;
+                    player.reset(1830, 2);
+                });
+            },
+
+            coinOverlap: function (player, coin) {
+                coin.kill();
+                score += 50;
+                scoreText.text = 'Score: ' + score;
+                var snd = game.add.audio("coin");
+                snd.play();
+            },
+            flowerOverlap: function (player, flower) {
+                flower.kill();
+                var snd = game.add.audio("key");
+                snd.play();
+                score += 500;
+                scoreText.text = 'Score: ' + score;
+            },
+            mushOverlap: function (player, mush) {
+                mush.kill();
+                var snd = game.add.audio("mush");
+                snd.play();
+                score += 500;
+                scoreText.text = 'Score: ' + score;
+                life++;
+                lifeText.text = 'life: ' + life;
+            },
+            goombaOverlap: function (player, goomba) {
+                if (player.body.touching.down) {
+                    goomba.animations.stop();
+                    goomba.frame = 2;
+                    goomba.body.enable = false;
+                    player.body.velocity.y = -80;
+                    game.time.events.add(Phaser.Timer.SECOND, function () {
+                        goomba.kill();
+                        var snd = game.add.audio("Squish");
+                        snd.play();
+                        score += 100;
+                        scoreText.text = 'Score: ' + score;
+                    });
+                } else {
+                    life--;
+                    lifeText.text = 'life: ' + life;
+                    player.x = player.x - 30;
+                    var snd = game.add.audio("stomp");
+                    snd.play();
+                } if (life == 0) {
+                    player.frame = 6;
+                    player.body.enable = false;
+                    player.animations.stop();
+                    var snd = game.add.audio("fail");
+                    snd.play();
+
+                    game.time.events.add(Phaser.Timer.SECOND * 3, function () {
+                        game.paused = true;
+
+                        gameoverText = game.add.text(20, 100, 'GAME OVER', { fontSize: '32px', fill: '#000' });
+                        gameoverText.fixedToCamera = true;
+                        game.state.start("menu");
+
+
+
+
+                    });
+                }
+            },
+            bugOverlap: function (player, bug) {
+                if (player.body.touching.down) {
+                    bug.animations.stop();
+                    bug.frame = 2;
+                    bug.body.enable = false;
+                    player.body.velocity.y = -80;
+                    game.time.events.add(Phaser.Timer.SECOND, function () {
+                        bug.kill();
+                        var snd = game.add.audio("Squish");
+                        snd.play();
+                        score += 100;
+                        scoreText.text = 'Score: ' + score;
+                    });
+                } else {
+                    life--;
+                    lifeText.text = 'life: ' + life;
+                    player.x = player.x - 30;
+                    var snd = game.add.audio("stomp");
+                    snd.play();
+                } if (life == 0) {
+                    player.frame = 6;
+                    player.body.enable = false;
+                    player.animations.stop();
+                    var snd = game.add.audio("fail");
+                    snd.play();
+                    game.paused = true;
+                    gameoverText = game.add.text(20, 100, 'GAME OVER', { fontSize: '32px', fill: '#000' });
+                    gameoverText.fixedToCamera = true; ``
+                    game.state.start("menu");
+
+                }
+            }
+        };
+        game.state.add("preload", preload);
+        var score = 0;
+        var scoreText;
+        var life = 3;
+        var lifeText;
+        var gameoverText;
+        var winText;
+        level3 = {
+            preload: function () {
+
+                this.load.spritesheet('tiles', 'assets/super_mario_tiles.png', 16,
+                    16);
+                this.load.spritesheet('bug', 'assets/bug.png', 16, 16);
+                this.load.spritesheet('goomba', 'assets/goomba.png', 16, 16);
+                this.load.spritesheet('mario', 'assets/mario.png', 16, 16);
+                this.load.spritesheet('coin', 'assets/coin.png', 16, 16);
+                this.load.spritesheet('flower', 'assets/flower.png', 16, 16);
+                this.load.spritesheet('mush', 'assets/mush.png', 16, 16);
+                this.load.spritesheet('portal1', 'assets/portal1.png', 16, 16);
+                this.load.spritesheet('door', 'assets/door.png', 16, 16);
+                this.load.spritesheet('portal2', 'assets/portal2.png', 16, 16);
+                this.load.audio('jump', ['audio/jump.wav']);
+                this.load.audio('coin', ['audio/coin.wav']);
+                this.load.audio('chest', ['audio/chest.wav']);
+                this.load.audio('mush', ['audio/mush.wav']);
+                this.load.audio('Squish', ['audio/Squish.wav']);
+                this.load.audio('key', ['audio/key.wav']);
+                this.load.audio('fail', ['audio/fail.wav']);
+                this.load.audio('stomp', ['audio/stomp.wav']);
+                this.load.audio('win', ['audio/win.wav']);
+                this.load.audio('bgm', ['audio/bgm.mp3']);
+                this.load.tilemap('level', 'assets/2014104b.json', null,
+                    Phaser.Tilemap.TILED_JSON);
+
+
+            },
+            create: function () {
+                Phaser.Canvas.setImageRenderingCrisp(game.canvas);
+                game.scale.pageAlignHorizontally = true;
+                game.scale.pageAlignVertically = true;
+                game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+                game.physics.startSystem(Phaser.Physics.ARCADE);
+                game.stage.backgroundColor = '#55ffff';
+                map = game.add.tilemap('level');
+                map.addTilesetImage('tiles', 'tiles');
+                map.setCollisionBetween(11, 44, true, 'solid');
+                map.createLayer('background');
+                layer = map.createLayer('solid');
+                layer.resizeWorld();
+                coins = game.add.group();
+                coins.enableBody = true;
+                map.createFromTiles(2, null, 'coin', 'stuff', coins);
+                coins.callAll('animations.add', 'animations', 'spin',
+                    [0, 0, 1, 2], 3, true);
+                coins.callAll('animations.play', 'animations', 'spin');
+                flowers = game.add.group();
+                flowers.enableBody = true;
+                map.createFromTiles(3, null, 'flower', 'stuff', flowers);
+                flowers.callAll('animations.add', 'animations', 'spin',
+                    [0, 0, 1, 2, 3], 4, true);
+                flowers.callAll('animations.play', 'animations', 'spin');
+                mushs = game.add.group();
+                mushs.enableBody = true;
+                map.createFromTiles(5, null, 'mush', 'stuff', mushs);
+                mushs.callAll('animations.add', 'animations', 'spin',
+                    [0, 0, 1, 2], 2, true);
+                mushs.callAll('animations.play', 'animations', 'spin');
+                portal1 = game.add.sprite(1571, game.world.height - 175, 'portal1');
+                game.physics.arcade.enable(portal1);
+                portal1.body.gravity.y = 0;
+                portal1.enableBody = true;
+                portal1.animations.add('spin',
+                    [0, 0, 1], 2, true);
+                portal1.animations.play('spin');
+
+                door = game.add.sprite(1975, game.world.height - 50, 'door');
+                game.physics.arcade.enable(door);
+                door.body.gravity.y = 0;
+                door.enableBody = true;
+                door.animations.add('spin',
+                    [0, 0, 1, 2, 3, 4,], 4, true);
+                door.animations.play('spin');
+                goombas = game.add.group();
+                goombas.enableBody = true;
+                map.createFromTiles(1, null, 'goomba', 'stuff', goombas);
+                goombas.callAll('animations.add', 'animations', 'walk', [0, 1],
+                    4, true);
+                goombas.callAll('animations.play', 'animations', 'walk');
+                goombas.setAll('body.bounce.x', 1);
+                goombas.setAll('body.velocity.x', -20);
+                goombas.setAll('body.gravity.y', 500);
+                bugs = game.add.group();
+                bugs.enableBody = true;
+                map.createFromTiles(4, null, 'bug', 'stuff', bugs);
+                bugs.callAll('animations.add', 'animations', 'walk', [0, 1],
+                    2, true);
+                bugs.callAll('animations.play', 'animations', 'walk');
+                bugs.setAll('body.bounce.x', 1);
+                bugs.setAll('body.velocity.x', -20);
+                bugs.setAll('body.gravity.y', 500);
+                player = game.add.sprite(16, game.world.height - 48, 'mario');
+                game.physics.arcade.enable(player);
+                player.body.gravity.y = 170;
+                player.body.collideWorldBounds = true;
+                player.animations.add('walkRight', [1, 2, 3], 10, true);
+                player.animations.add('walkLeft', [8, 9, 10], 10, true);
+                player.goesRight = true;
+                game.camera.follow(player);
+                var snd = game.add.audio("bgm");
+                snd.play();
+                cursors = game.input.keyboard.createCursorKeys();
+                scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '16px', fill: '#000' });
+                scoreText.fixedToCamera = true;
+                lifeText = game.add.text(16, 30, 'life: 3', { fontSize: '16px', fill: '#000' });
+                lifeText.fixedToCamera = true;
+                winText = game.add.text(1850, 40, "World 2 Completed!", { font: "16px ", fill: "#000" });
+
+
+            },
+            update: function () {
+            winText.text = "World 3 Completed!";
+                game.physics.arcade.collide(player, layer);
+                game.physics.arcade.collide(goombas, layer);
+                game.physics.arcade.overlap(player, goombas, this.goombaOverlap);
+                game.physics.arcade.collide(bugs, layer);
+                game.physics.arcade.overlap(player, bugs, this.bugOverlap);
+                game.physics.arcade.overlap(player, coins, this.coinOverlap);
+                game.physics.arcade.overlap(player, flowers, this.flowerOverlap);
+                game.physics.arcade.overlap(player, mushs, this.mushOverlap);
+                game.physics.arcade.overlap(player, portal1, this.portal1Overlap);
+
+                game.physics.arcade.overlap(player, door, this.doorOverlap);
+                if (player.body.enable) {
+                    player.body.velocity.x = 0;
+                    if (cursors.left.isDown) {
+                        player.body.velocity.x = -90;
+                        player.animations.play('walkLeft');
+                        player.goesRight = false;
+                    } if (cursors.up.isDown) {
+                        player.body.velocity.y = -39;
+                        player.animations.stop();
+                    }
+                    if (cursors.down.isDown) {
+                        player.body.velocity.y = 50;
+                        player.animations.stop();
+                    }
+                    else if (cursors.right.isDown) {
+                        player.body.velocity.x = 90;
+                        player.animations.play('walkRight');
+                        player.goesRight = true;
+                    } else {
+                        player.animations.stop();
+                        if (player.goesRight)
+                            player.frame = 0;
+                        else
+                            player.frame = 7;
+                    }
+                    if (cursors.up.isDown && player.body.onFloor()) {
+                        var snd = game.add.audio("jump");
+                        snd.play();
+                        player.body.velocity.y = -190;
+                        player.animations.stop();
+                    }
+                    if (player.body.velocity.y != 0) {
+                        if (player.goesRight)
+                            player.frame = 5;
+                        else
+                            player.frame = 12;
+                    }
+                }
+            },
+            doorOverlap: function (player, door) {
+
+
+                var snd = game.add.audio("win");
+                snd.play();
+
+
+
+                player.animations.play('walkRight');
+                player.body.velocity.y = -190;
+                player.animations.play('walkLeft');
+                player.body.velocity.y = -190;
+                player.animations.play('walkRight');
+                player.body.velocity.y = -190;
+                player.animations.play('walkLeft');
+                player.body.velocity.y = -190;
+                player.animations.play('walkRight'); score += 1000000;
+                scoreText.text = 'Score: ' + score;
+
+                game.time.events.add(Phaser.Timer.SECOND * 12, function () {
+                    door.kill();
+
+
                     game.state.start("menu");
 
                 });
@@ -656,6 +974,7 @@
 
                         gameoverText = game.add.text(20, 100, 'GAME OVER', { fontSize: '32px', fill: '#000' });
                         gameoverText.fixedToCamera = true;
+                        game.state.start("menu");
 
 
 
@@ -691,7 +1010,7 @@
                     game.paused = true;
                     gameoverText = game.add.text(20, 100, 'GAME OVER', { fontSize: '32px', fill: '#000' });
                     gameoverText.fixedToCamera = true; ``
-
+                    game.state.start("menu");
 
                 }
             }
@@ -699,6 +1018,8 @@
         game.state.add("preload", preload);
         game.state.add("menu", menu);
         game.state.add("level1", level1);
+        game.state.start("preload");
+        game.state.add("level3", level3);
         game.state.start("preload");
 
         game.state.add("level2", level2);
